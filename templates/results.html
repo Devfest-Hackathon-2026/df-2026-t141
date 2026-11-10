@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}成果 | デッドアワー{% endblock %}
+{% block content %}
+<a class="back" href="/home/{{ user_id }}">← 拠点へ</a>
+<h1>成果</h1>
+
+<section class="card">
+  <h2>歩いた距離</h2>
+  <p class="result-total"><span>{{ "%.2f" | format(stats.total_walked_m / 1000) }}</span> km</p>
+  <p class="muted small">これまでの合計。拠点が崩壊しても減りません。</p>
+  <p class="result-week">直近7日間 <strong>{{ "%.2f" | format(stats.week_walked_m / 1000) }} km</strong></p>
+</section>
+
+<section class="card stats">
+  <div><p class="stat">{{ stats.clear_count }}</p><p class="muted small">逃げ切った回数</p></div>
+  <div><p class="stat">{{ stats.streak }}</p><p class="muted small">連続日数</p></div>
+  <div><p class="stat">{{ stats.capture_count }}</p><p class="muted small">捕まった回数</p></div>
+</section>
+
+<section class="card">
+  <h2>拠点</h2>
+  <p>いまの拠点 <strong>{{ rank_name }}</strong>（RANK {{ stats.base_rank }}）</p>
+  <p class="muted">最高記録 {{ best_rank_name }}（RANK {{ stats.best_base_rank }}）</p>
+</section>
+
+<section class="card">
+  <h2>最近の記録</h2>
+  {% if stats.history %}
+  <ol class="history">
+    {% for record in stats.history %}
+    <li>
+      <time class="local-time" datetime="{{ record.cleared_at.isoformat() }}"></time>
+      <span class="history-name">{{ record.shelter_name }}</span>
+      <span class="history-distance">{{ "{:,}".format(record.walked_m) }}m</span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="muted">まだ記録がありません。最初のミッションに出発しよう。</p>
+  {% endif %}
+</section>
+
+<a class="button primary" href="/home/{{ user_id }}">拠点へ戻る</a>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll("time.local-time").forEach(function (el) {
+    el.textContent = new Date(el.dateTime).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  });
+</script>
+{% endblock %}

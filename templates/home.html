@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}拠点 | デッドアワー{% endblock %}
+{% block head %}
+<link rel="manifest" href="/manifest/{{ user_id }}.webmanifest">
+<link rel="apple-touch-icon" href="/static/icon.svg">
+{% endblock %}
+{% block content %}
+<header class="page-head">
+  <p class="muted">{{ user.nickname }} 隊員の拠点</p>
+  <p class="level">RANK {{ user.base_rank }}</p>
+</header>
+
+{% if running %}
+<a class="button primary run-now" href="{{ running.escape_url }}">外のマップに戻る</a>
+<p class="muted small run-note">{% if running.kind == "free" %}フリーラン中{% else %}毎日のミッションで逃走中{% endif %}。シェルターまで逃げ切ろう</p>
+{% elif user.chasing %}
+<p class="notice danger">拠点の外で追われています。シェルターを選んでいなければ、時刻が来るまで追いかけてきます。</p>
+{% endif %}
+
+{% if user.last_result == "run_captured" %}
+<p class="notice">フリーランは失敗。ゾンビに追いつかれたが、拠点は無事だ。また走ろう。</p>
+{% elif user.last_result in ("captured", "failed") %}
+<p class="notice danger">
+  ゲームオーバー。{% if user.last_result == "captured" %}ゾンビに追いつかれた。{% else %}脱出できなかった。{% endif %}
+  {% if lost_rank_name %}{{ lost_rank_name }}が崩壊し、テントからやり直しだ。{% else %}ここからリベンジだ。{% endif %}
+</p>
+{% endif %}
+
+<section class="card base" aria-labelledby="base-name">
+  <div id="base-scene" class="base-scene" role="img" aria-label="拠点「{{ user.base_rank_name }}」の3D表示">
+    <p class="base-fallback" aria-hidden="true">{{ ("⛺", "🛖", "🏚️", "🏯", "🏰", "🧱", "⚡", "🗼", "🌱", "🏙️")[user.base_rank - 1] }}</p>
+  </div>
+  <button class="base-avatar-open" id="avatar-open" type="button" aria-expanded="false" aria-controls="avatar-card">アバター</button>
+  <div class="avatar-panel" id="avatar-card" data-user="{{ user_id }}" hidden>
+    <p class="muted small">拠点と外のマップに出る自分の姿。色を押すとすぐ変わる。</p>
+    <p class="swatch-label">服</p>
+    <div class="swatches" role="radiogroup" aria-label="服の色">
+      {% for name, color in outfits.items() %}
+      <button type="button" class="swatch" role="radio" data-kind="outfit" data-value="{{ name }}" data-color="{{ color }}" style="--swatch: {{ color }}"
+        aria-checked="{{ 'true' if name == user.avatar_outfit else 'false' }}" aria-label="服 {{ name }}"></button>
+      {% endfor %}
+    </div>
+    <p class="swatch-label">肌</p>
+    <div class="swatches" role="radiogroup" aria-label="肌の色">
+      {% for name, color in skins.items() %}
+      <button type="button" class="swatch" role="radio" data-kind="skin" data-value="{{ name }}" data-color="{{ color }}" style="--swatch: {{ color }}"
+        aria-checked="{{ 'true' if name == user.avatar_skin else 'false' }}" aria-label="肌 {{ name }}"></button>
+      {% endfor %}
+    </div>
+    <p class="notice" id="avatar-status" role="status" hidden></p>
+  </div>
+  <h2>拠点</h2>
+  <p class="base-name" id="base-name">{{ user.base_rank_name }}</p>
+  {% if user.next_rank_m is not none %}
+  <div class="gauge base-gauge" role="img" aria-label="次のランクまでの進み具合">
+    <div class="gauge-fill" style="width: {{ ((user.base_escaped_m - rank_start_m) / (user.next_rank_m - rank_start_m) * 100) | round(1) }}%"></div>
+  </div>
+  <p class="muted small">拠点ポイント {{ "{:,}".format(user.base_escaped_m) }} ／ 次のランクまで あと{{ "{:,}".format(user.next_rank_m - user.base_escaped_m) }}</p>
+  {% else %}
+  <p class="muted small">最大ランク。拠点ポイント {{ "{:,}".format(user.base_escaped_m) }}。捕まらずに守り抜こう</p>
+  {% endif %}
+  <p class="muted small">逃げた距離と、道で拾う資材で強くなる。ハードならポイント1.5倍。捕まると崩壊し、テントからやり直し。</p>
+</section>
+
+<section class="card free-run">
+  <h2>フリーラン</h2>
+  <p class="muted small">毎日の逃走とは別に、いつでも何回でも走れる。今いる場所の近くの公園へ逃げ込もう（捕まっても拠点は無事。ただし毎日の時刻をまたいで捕まると崩壊する）。</p>
+  {% if not running and not user.chasing %}
+  <a class="button" href="/run/{{ user_id }}">フリーラン</a>
+  {% endif %}
+</section>
+
+<section class="card daily-mission">
+  <h2>毎日の逃走</h2>
+  {% if mission %}
+    <p class="shelter-name">{{ mission.shelter.name }}</p>
+    <p class="muted">出発 <time class="local-time" datetime="{{ mission.depart_at.isoformat() }}"></time></p>
+    {% if mission.status == "escaped" %}
+      <a class="button primary" href="{{ mission.escape_url }}">シェルターへ向かう</a>
+    {% elif running %}
+      <p class="muted small">フリーラン中は脱出できない。毎日の時刻をまたいで逃げ切れば、今日の分も達成になる。</p>
+    {% else %}
+      <p class="muted small">出発の時刻にゾンビが家へやって来る。それまでに家を出て、このシェルターまで逃げ切ろう。</p>
+      <a class="button primary" href="{{ mission.escape_url }}">ゾンビから逃げる</a>
+    {% endif %}
+  {% else %}
+    <p class="muted"><time class="local-time" datetime="{{ user.arrival_at.isoformat() }}"></time> にゾンビが来る。逃げ込むシェルターを選ぼう。</p>
+    <a class="button primary" href="/reserve/{{ user_id }}">シェルターを選ぶ</a>
+  {% endif %}
+  <div class="freeze" id="freeze" data-user="{{ user_id }}">
+    <p class="freeze-count">フリーズ <strong>{{ user.freeze_count }}</strong>／{{ freeze_max }}</p>
+    {% if user.freeze_count > 0 and not user.chasing and not running %}
+    <button class="button" id="freeze-use" type="button">フリーズを使って、次の1日を休む</button>
+    {% endif %}
+    <p class="muted small">毎日の逃走の道に、ときどきフリーズが落ちている。シェルターまで持ち帰ってためておき、使うと次の時刻にゾンビが来ない（連続日数も切れない）。</p>
+    <p class="notice" id="freeze-status" role="status" hidden></p>
+  </div>
+</section>
+
+<section class="card zombie" id="zombie">
+  <h2>ゾンビとの距離</h2>
+  <p class="zombie-distance"><span id="zombie-km">{{ "%.5f" | format(user.zombie_km) }}</span> km</p>
+  <div class="gauge" role="img" aria-label="ゾンビとの距離">
+    <div class="gauge-fill" id="zombie-gauge" style="width: {{ user.zombie_km / zombie_max_km * 100 }}%"></div>
+  </div>
+  {% if user.chasing %}
+  <p class="muted small">拠点を出たあなたを、時速{{ "%g" | format(user.zombie_speed_km_per_hour) }}kmで追いかけています</p>
+  {% else %}
+  <p class="muted small"><time class="local-time" datetime="{{ user.arrival_at.isoformat() }}"></time> に拠点へ着きます。それまでに外へ出よう</p>
+  {% endif %}
+</section>
+
+
+<section class="card stats">
+  <div><p class="stat">{{ user.streak }}</p><p class="muted small">連続日数</p></div>
+  <div><p class="stat">{{ "%.1f" | format(user.total_walked_m / 1000) }}</p><p class="muted small">歩いた距離（km）</p></div>
+  <div><p class="stat">{{ user.capture_count }}</p><p class="muted small">捕まった回数</p></div>
+</section>
+<a class="button results-link" href="/results/{{ user_id }}">成果を見る</a>
+
+<section class="card settings">
+  <h2>毎日の時刻</h2>
+  <p class="muted">毎日 {{ user.daily_notify_time }} にゾンビが来ます。次は <time class="local-time" datetime="{{ user.arrival_at.isoformat() }}"></time>。</p>
+  <form id="daily-time-form" class="daily-time" data-user="{{ user_id }}">
+    <label class="field">
+      <span>時刻を変える（反映は明日から）</span>
+      <input type="time" id="daily-time" value="{{ user.daily_notify_time }}" required>
+    </label>
+    <button class="button" type="submit">明日から変更</button>
+    <p class="notice" id="daily-time-status" role="status" hidden></p>
+  </form>
+  {% if push_config %}
+  <button class="button" id="push-enable" type="button">接近したら通知を受け取る</button>
+  <p class="notice" id="push-status" role="status" hidden></p>
+  {% endif %}
+</section>
+
+<details class="transfer">
+  <summary>別の端末で続ける</summary>
+  <p class="muted small">拠点は今の端末でだけ開ける。機種変更のときや端末を失くしたときのために、コードを発行して控えておこう。</p>
+  <button class="button" id="transfer-issue" type="button">引き継ぎコードを発行</button>
+  <div id="transfer-result" hidden>
+    <p class="transfer-code" id="transfer-code"></p>
+    <p class="muted small">新しい端末でトップを開き、「引き継ぎコードをお持ちの方」からこのコードを入れてね。1回使うか、発行し直すと無効になる。</p>
+  </div>
+  <p class="notice" id="transfer-status" role="status" hidden></p>
+</details>
+{% endblock %}
+{% block scripts %}
+<script type="application/json" id="base-data">{{ base_data | tojson }}</script>
+<script src="/static/home.js?v={{ asset_version }}"></script>
+<script type="module" src="/static/base3d.js?v={{ asset_version }}"></script>
+{% if push_config %}
+<script type="application/json" id="push-config">{{ push_config | tojson }}</script>
+<script type="module" src="/static/push.js?v={{ asset_version }}"></script>
+{% endif %}
+{% endblock %}

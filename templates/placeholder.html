@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p class="muted">この画面（{{ owner }}）はA担当が作成します。</p>
+{% if show_dev_link %}
+<a class="button primary" href="/dev/new-user">テスト隊員でホームを開く</a>
+{% endif %}
+{% endblock %}

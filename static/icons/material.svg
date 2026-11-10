@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="資材">
+  <circle cx="32" cy="32" r="28" fill="#c6f135" fill-opacity=".22"/>
+  <rect x="12" y="18" width="40" height="34" rx="2" fill="#9a7048" stroke="#0c120a" stroke-width="3"/>
+  <path d="M12 30h40M12 41h40M24 18v34M40 18v34" stroke="#4e3622" stroke-width="2.5"/>
+  <path d="M14 20l36 30" stroke="#c6f135" stroke-width="4" stroke-linecap="round"/>
+</svg>

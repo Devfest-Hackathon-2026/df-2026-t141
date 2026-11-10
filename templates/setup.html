@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}隊員登録 | デッドアワー{% endblock %}
+{% block content %}
+<h1>隊員登録</h1>
+<form id="setup-form">
+  <label class="field">
+    <span>ニックネーム</span>
+    <input id="nickname" type="text" maxlength="20" required>
+  </label>
+  <label class="field">
+    <span>毎日ゾンビが来る時刻</span>
+    <input id="notify-time" type="time" value="18:00" required>
+  </label>
+  <div class="card">
+    <h2>家の場所</h2>
+    <p class="muted small">家にいるときに押してね</p>
+    <button id="locate" class="button" type="button">今いる場所を家として登録</button>
+    <p id="home-status" class="small" aria-live="polite"></p>
+  </div>
+  <p id="error" class="notice danger" hidden></p>
+  <button id="submit" class="button primary" type="submit" disabled>隊員登録する</button>
+</form>
+{% endblock %}
+{% block scripts %}<script src="/static/setup.js?v={{ asset_version }}"></script>{% endblock %}

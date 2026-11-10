@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="シェルター">
+  <path d="M32 5l27 21v32H5V26z" fill="#c6f135" stroke="#0c120a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M5 26L32 5l27 21-6 5-21-16-21 16z" fill="#ffc53d" stroke="#0c120a" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M22 58V38a10 10 0 0 1 20 0v20z" fill="#10150a"/>
+  <path d="M32 33v12m-6-6h12" stroke="#c6f135" stroke-width="3.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}引き継ぎ | デッドアワー{% endblock %}
+{% block content %}
+<h1>別の端末で続ける</h1>
+<p class="muted">拠点は、登録した端末でだけ開けます。この端末で続けるには、引き継ぎコードを入れてください。</p>
+<form id="link-form" class="card">
+  <label class="field">
+    <span>引き継ぎコード</span>
+    <input id="code" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX" required>
+  </label>
+  <button class="button primary" id="submit" type="submit">この端末で続ける</button>
+  <p class="notice danger" id="error" role="alert" hidden></p>
+</form>
+<p class="muted small">コードは、元の端末の拠点の「別の端末で続ける」で発行できます。</p>
+<p class="muted small">iPhone でホーム画面に追加したアプリは、Safari とは別の端末として扱われることがあります。そのときも、Safari で発行したコードを入れてください。</p>
+<a class="button" href="/">トップへ</a>
+{% endblock %}
+{% block scripts %}<script src="/static/link.js?v={{ asset_version }}"></script>{% endblock %}

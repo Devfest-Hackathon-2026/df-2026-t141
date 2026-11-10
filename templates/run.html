@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}フリーラン | デッドアワー{% endblock %}
+{% block content %}
+<a class="back" href="/home/{{ user_id }}">← 拠点へ</a>
+<h1>フリーラン</h1>
+
+{% if running_url %}
+<p class="notice">逃走中のミッションがあります。</p>
+<a class="button primary" href="{{ running_url }}">外のマップに戻る</a>
+{% elif chasing %}
+<p class="notice danger">いまは追われています。先にシェルターへ逃げ込もう。</p>
+{% else %}
+<p class="muted">背後{{ "%g" | format(free_run_m) }}mからゾンビが追ってくる。近くの公園まで逃げ切れば拠点ポイント。何回でも走れて、捕まっても拠点は無事。ただし毎日の時刻をまたいで捕まると、拠点は崩壊する。</p>
+
+<form id="run-form" data-user="{{ user_id }}">
+  <fieldset class="field">
+    <legend>モード</legend>
+    <div class="modes">
+      {% for name, mode in modes.items() %}
+      <label class="mode mode-{{ name }}">
+        <input type="radio" name="mode" value="{{ name }}" {% if name == "normal" %}checked{% endif %}>
+        <span class="mode-name">{{ mode.label }}</span>
+        <span class="mode-detail">ゾンビ{{ mode.zombies }}体・時速{{ "%g" | format(mode.speed_km_per_hour) }}km</span>
+        {% if mode.point_rate > 1 %}<span class="mode-detail">拠点ポイント{{ "%g" | format(mode.point_rate) }}倍</span>{% endif %}
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+
+  <fieldset class="field">
+    <legend>逃げ込む公園（今いる場所の近く）</legend>
+    <p class="muted" id="shelter-status" role="status">現在地を確認中…</p>
+    <button class="button" id="relocate" type="button" hidden>現在地を取り直す</button>
+    <div class="map shelter-map" id="shelter-map" data-maps-key="{{ maps_key }}" data-map-id="{{ map_id }}" role="group" aria-label="候補の地図。番号は一覧と同じで、押すと選べる" hidden></div>
+    <div id="shelters"></div>
+  </fieldset>
+
+  <p class="muted small">周りをよく見て、車や自転車に気をつけて。走りながら画面を見ないでね。</p>
+  <button class="button primary" type="submit" id="submit" disabled>フリーラン開始！</button>
+  <p class="notice danger" id="error" role="alert" hidden></p>
+</form>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if not running_url and not chasing %}
+<script src="/static/shelter-map.js?v={{ asset_version }}"></script>
+<script src="/static/run.js?v={{ asset_version }}"></script>
+{% endif %}{% endblock %}

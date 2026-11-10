@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}ゾンビ接近中 | デッドアワー{% endblock %}
+{% block head %}
+<link rel="preconnect" href="https://maps.googleapis.com">
+<link rel="preconnect" href="https://maps.gstatic.com" crossorigin>
+{% endblock %}
+{% block content %}
+<div id="mission" data-mission-id="{{ mission_id }}" data-maps-key="{{ maps_key }}" data-map-id="{{ map_id }}">
+  <p class="notice" id="loading">読み込み中…</p>
+  <p class="notice danger" id="load-error" hidden></p>
+
+  <section id="screen-escape" hidden>
+    <a class="back" data-home>← 拠点へ</a>
+    <h1>ゾンビ接近中！</h1>
+
+    <div class="card">
+      <h2>脱出まで</h2>
+      <p class="zombie-distance" id="countdown" role="timer">--:--</p>
+
+      <p class="muted small">出発時刻までに「脱出！」を押して逃げよう。間に合わないと拠点が崩壊する</p>
+
+    </div>
+
+    <div class="card">
+      <h2>ゾンビとの距離</h2>
+      <p class="zombie-distance"><span class="js-zombie-km">-</span></p>
+      <div class="gauge" role="img" aria-label="ゾンビとの距離">
+        <div class="gauge-fill js-zombie-gauge"></div>
+      </div>
+      <div id="map-slot-escape">
+        <div id="map" class="map" role="img" aria-label="ゾンビ、自分、シェルターの位置の地図"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>シェルター</h2>
+      <p class="shelter-name js-shelter-name"></p>
+      <p class="muted" id="shelter-info"></p>
+      <p class="muted small">脱出すると、外のマップにシェルターまでの徒歩ルートが出ます。</p>
+      <p class="muted small">周りをよく見て歩こう。走りながら画面を見ないでね。</p>
+    </div>
+
+    <p class="notice" id="night-warning" hidden>暗い時間帯です。明るい道を選んでください。</p>
+    <p class="notice danger" id="escape-message" role="status" hidden></p>
+    <button class="button primary" id="escape" type="button">脱出！</button>
+    <p class="muted small">押すとすぐ逃走開始。地図にシェルターまでの道が出る</p>
+  </section>
+
+  <!-- ⑥ 外のマップ。地図を画面いっぱいに出し、情報は上下に重ねる -->
+  <section id="screen-shelter" class="outside" hidden>
+    <div class="outside-map" id="map-slot-shelter"></div>
+    <div class="threat-vignette" id="threat" aria-hidden="true" hidden></div>
+
+    <div class="hud hud-top" id="hud-top">
+      <p class="hud-label"><span class="hud-mode" id="hud-mode"></span><span class="js-shelter-name"></span></p>
+      <p class="hud-remaining" id="remaining" role="status">現在地を確認中…</p>
+      <div class="hud-row">
+        <p><span class="muted small">ゾンビまで</span> <span class="hud-danger js-zombie-km">-</span></p>
+        <p><span class="muted small">今回歩いた</span> <span class="hud-num" id="walked">0</span><span class="muted small">m</span></p>
+      </div>
+      <p class="hud-items" id="item-counts"></p>
+      <p class="hud-route" id="route-info" role="status" hidden></p>
+      <!-- たたむと、残りの距離とゾンビまでの距離だけの小さな1行になる -->
+      <button class="hud-fold" id="hud-fold" type="button" aria-expanded="true" aria-label="上の表示をたたむ"><span class="hud-fold-icon" aria-hidden="true"></span></button>
+    </div>
+
+    <p class="item-toast" id="item-toast" role="status" aria-live="assertive" hidden></p>
+
+    <p class="notice hud-flat" id="map-flat" hidden>地図が平面のままです。3D表示には、傾きを有効にしたベクター形式のマップIDが必要です（docs/gcp-setup.md）。</p>
+    <button class="hud-recenter" id="recenter" type="button" hidden>現在地に戻る</button>
+    <button class="hud-view" id="view-toggle" type="button" aria-pressed="false">真上から見る</button>
+    <button class="hud-bgm" id="bgm-toggle" type="button" aria-pressed="true">BGM オン</button>
+    <p class="hud-hint" id="orbit-hint" hidden>1本指でなぞると回る・傾く<br>2本指で拡大</p>
+
+    <div class="hud hud-bottom">
+      <p class="hud-warning" id="hud-warning">画面を見ながら歩かないで。立ち止まって確認しよう。<br>ポケットなら画面ロックでOK（接近の知らせは止まる）</p>
+      <p class="notice danger" id="checkin-message" role="status" hidden></p>
+      <button class="button primary" id="checkin" type="button" hidden>チェックイン</button>
+      <div class="hud-links">
+        <button class="button" id="route-refresh" type="button">ルートを更新</button>
+        <a class="button" data-home>拠点へ</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-cleared" hidden>
+    <h1>逃げ切った！</h1>
+    <div class="card stats">
+      <div><p class="stat" id="clear-walked"></p><p class="muted small">今回歩いた（m）</p></div>
+      <div><p class="stat" id="clear-rank"></p><p class="muted small">拠点ランク</p></div>
+      <div><p class="stat" id="clear-streak"></p><p class="muted small">連続日数</p></div>
+    </div>
+    <p class="notice" id="rank-up" hidden></p>
+    <p class="clear-bonus" id="clear-bonus"></p>
+    <p class="muted" id="clear-base"></p>
+    <a class="button primary" data-again>もう一度走る</a>
+    <a class="button" data-home>拠点へ戻る</a>
+  </section>
+
+  <section id="screen-failed" hidden>
+    <h1>ゲームオーバー</h1>
+    <p class="notice danger" id="failed-title">ミッション失敗。</p>
+    <p id="failed-collapse" hidden></p>
+    <p id="failed-next">明日リベンジしよう。</p>
+    <a class="button primary" data-again>もう一度走る</a>
+    <a class="button" data-home>拠点へ</a>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="application/json" id="avatar-palette">{{ avatar_palette | tojson }}</script>
+<script type="application/json" id="initial">{{ initial | tojson }}</script>
+<script src="/static/map.js?v={{ asset_version }}"></script>
+<script src="/static/bgm.js?v={{ asset_version }}"></script>
+<script src="/static/escape.js?v={{ asset_version }}"></script>
+<script type="module" src="/static/map3d.js?v={{ asset_version }}"></script>
+{% endblock %}

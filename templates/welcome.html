@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}デッドアワー{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="hero-tag">緊急放送 受信中</p>
+  <h1 class="hero-title">デッドアワー</h1>
+  <div class="hero-stripe"></div>
+  <p class="hero-lead">ゾンビがあなたの家に近づいている。</p>
+  <p class="muted">逃げるために、外へ出よう。</p>
+  <a class="button primary" id="resume" hidden>続きから</a>
+  <a class="button primary" id="start" href="/setup">はじめる</a>
+  {% if locked %}
+  <p class="muted small">この端末では、その拠点はまだ開けません。</p>
+  {% endif %}
+  {% if show_dev_link %}
+  <a class="button" href="/dev/new-user">テスト隊員でホームを開く</a>
+  {% endif %}
+  <a class="transfer-link muted small" href="/link">引き継ぎコードをお持ちの方</a>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/welcome.js?v={{ asset_version }}"></script>{% endblock %}

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}デッドアワー{% endblock %}</title>
+  <meta name="theme-color" content="#090b0a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Share+Tech+Mono&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap">
+  <link rel="stylesheet" href="/static/style.css?v={{ asset_version }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% if fakes %}
+  <p class="dev-banner">開発モード: {{ fakes | join("、") }}は本物ではありません</p>
+  {% endif %}
+  <main>{% block content %}{% endblock %}</main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
